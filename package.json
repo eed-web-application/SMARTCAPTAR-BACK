@@ -1,0 +1,31 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index",
+    "dev": "nodemon index"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "client-oauth2": "^4.3.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "express": "^4.18.1",
+    "express-session": "^1.17.3",
+    "http-proxy": "^1.18.1",
+    "oracledb": "^5.4.0",
+    "passport": "^0.6.0",
+    "passport-local": "^1.0.0",
+    "react-router-dom": "^6.6.1",
+    "socket.io": "^4.6.1",
+    "ssh2": "^1.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
+  }
+}
