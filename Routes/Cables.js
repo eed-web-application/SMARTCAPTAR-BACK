@@ -1,31 +1,34 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-var cors = require("cors")
+var cors = require("cors");
 
-router.post("/csvUploadConnectors", async (req,res) => {
-  //New variable for cables taht are being sent 
-  let arr = req.body.arr
- 
-  console.log(arr)
+router.post("/csvUploadConnectors", async (req, res) => {
+  //New variable for cables taht are being sent
+  let arr = req.body.arr;
+
+  console.log(arr);
   const oracledb = req.db;
   const conDetails = req.conDetails;
   oracledb.autoCommit = true;
-    let db;
-  var temp = Object.keys(arr)
-  try {   
+  let db;
+  var temp = Object.keys(arr);
+  try {
     db = await oracledb.getConnection(conDetails);
-    const truncateTable = await db.execute(`TRUNCATE TABLE SMARTCAPTAR_COMPATIBILITY`);
+    const truncateTable = await db.execute(
+      `TRUNCATE TABLE SMARTCAPTAR_COMPATIBILITY`
+    );
 
-     for(var i = 0; i < temp.length; i++){
+    for (var i = 0; i < temp.length; i++) {
       const result = await db.execute(
         `INSERT INTO SMARTCAPTAR_COMPATIBILITY (CABLETYPE,COMPAT)
         VALUES 
         (
         '${temp[i]}',
         '${arr[temp[i]]}'
-        )`);
+        )`
+      );
     }
-    res.json({msg: "SUCCESS"})
+    res.status(200);
   } catch (err) {
     console.error(err);
   }
@@ -37,44 +40,43 @@ router.post("/csvUploadConnectors", async (req,res) => {
       console.error(err);
     }
   }
-})
-router.post("/csvUploadUsers", async (req,res) => {
-  //New variable for cables taht are being sent 
-  let arr = req.body.arr
-  console.log(arr)
+});
+router.post("/csvUploadUsers", async (req, res) => {
+  //New variable for cables taht are being sent
+  let arr = req.body.arr;
+  console.log(arr);
   const oracledb = req.db;
   const conDetails = req.conDetails;
   oracledb.autoCommit = true;
-    let db;
-  var temp = Object.keys(arr)
-  try {   
+  let db;
+  var temp = Object.keys(arr);
+  try {
     db = await oracledb.getConnection(conDetails);
     const resultUsers = await db.execute(
-      `SELECT USERNAME FROM SMARTCAPTAR_USERS`);
-  
-  let users = resultUsers.rows
-  let usernames = []
-  for(var i = 0; i < users.length; i++){
-    usernames.push(users[i].USERNAME)
-  }
-console.log(users)
+      `SELECT USERNAME FROM SMARTCAPTAR_USERS`
+    );
 
+    let users = resultUsers.rows;
+    let usernames = [];
+    for (var i = 0; i < users.length; i++) {
+      usernames.push(users[i].USERNAME);
+    }
 
-     for(var i = 0; i < temp.length; i++){
-      if(usernames.includes(temp[i])){s
-         console.log("FOUND USER "+ temp[i])
-      }else{
+    for (var i = 0; i < temp.length; i++) {
+      if (usernames.includes(temp[i])) {
+        console.log("FOUND USER " + temp[i]);
+      } else {
         const result = await db.execute(
           `INSERT INTO SMARTCAPTAR_USERS (USERNAME,PROJECTS)
           VALUES 
           (
           '${temp[i]}',
           '${arr[temp[i]]}'
-          )`);
+          )`
+        );
       }
-      
     }
-    res.json({msg: "SUCCESS"})
+    res.json({ msg: "SUCCESS" });
   } catch (err) {
     console.error(err);
   }
@@ -86,66 +88,99 @@ console.log(users)
       console.error(err);
     }
   }
-})
-router.get("/getCablesInventory", cors(), async (req,res) => {
-  
+});
+router.get("/getCablesInventory", cors(), async (req, res) => {
   const oracledb = req.db;
   const conDetails = req.conDetails;
   let table = req.query.table;
   let offset = req.query.offset;
   let user = req.query.user;
   let txt = req.query.searchTxt;
-    let db;
+  let db;
   let filter = req.query.filter;
   try {
     db = await oracledb.getConnection(conDetails);
     const result = await db.execute(
-      `SELECT * from CABLEINV WHERE CABLEINV.${filter} LIKE '${txt}%' OFFSET ${offset} ROWS FETCH FIRST 10 ROWS ONLY`
+      `SELECT * FROM CABLEINV WHERE CABLEINV.${filter} LIKE '${txt}%' OFFSET ${offset} ROWS FETCH FIRST 10 ROWS ONLY`
     );
-    let arr = []
-    for(var i = 0; i < result.rows.length; i++){
+    let arr = [];
+    for (var i = 0; i < result.rows.length; i++) {
       const cable = await db.execute(
         `SELECT * FROM CONNINV WHERE CABLENUM = '${result.rows[i].CABLENUM}'`
       );
-      result.rows[i]["ORIGIN_LOC"] = cable.rows[0].LOC
-      result.rows[i]["ORIGIN_RACK"] = cable.rows[0].RACK
-      result.rows[i]["ORIGIN_SIDE"] = cable.rows[0].SIDE
-      result.rows[i]["ORIGIN_ELE"] = cable.rows[0].ELE
-      result.rows[i]["ORIGIN_SLOT"] = cable.rows[0].SLOT
-      result.rows[i]["ORIGIN_CONNNUM"] = cable.rows[0].CONNUM
-      result.rows[i]["ORIGIN_PINLIST"] = cable.rows[0].PINLIST
-      result.rows[i]["ORIGIN_CONNTYPE"] = cable.rows[0].CONNTYPE
-      result.rows[i]["ORIGIN_STATION"] = cable.rows[0].STATION
-      result.rows[i]["ORIGIN_INSTR"] = cable.rows[0].INSTR
+      result.rows[i]["ORIGIN_LOC"] = cable.rows[0].LOC;
+      result.rows[i]["ORIGIN_RACK"] = cable.rows[0].RACK;
+      result.rows[i]["ORIGIN_SIDE"] = cable.rows[0].SIDE;
+      result.rows[i]["ORIGIN_ELE"] = cable.rows[0].ELE;
+      result.rows[i]["ORIGIN_SLOT"] = cable.rows[0].SLOT;
+      result.rows[i]["ORIGIN_CONNNUM"] = cable.rows[0].CONNUM;
+      result.rows[i]["ORIGIN_PINLIST"] = cable.rows[0].PINLIST;
+      result.rows[i]["ORIGIN_CONNTYPE"] = cable.rows[0].CONNTYPE;
+      result.rows[i]["ORIGIN_STATION"] = cable.rows[0].STATION;
+      result.rows[i]["ORIGIN_INSTR"] = cable.rows[0].INSTR;
 
-      result.rows[i]["DEST_LOC"] = cable.rows[1].LOC
-      result.rows[i]["DEST_RACK"] = cable.rows[1].RACK
-      result.rows[i]["DEST_SIDE"] = cable.rows[1].SIDE
-      result.rows[i]["DEST_ELE"] = cable.rows[1].ELE
-      result.rows[i]["DEST_SLOT"] = cable.rows[1].SLOT
-      result.rows[i]["DEST_CONNNUM"] = cable.rows[1].CONNUM
-      result.rows[i]["DEST_PINLIST"] = cable.rows[1].PINLIST
-      result.rows[i]["DEST_CONNTYPE"] = cable.rows[1].CONNTYPE
-      result.rows[i]["DEST_STATION"] = cable.rows[1].STATION
-      result.rows[i]["DEST_INSTR"] = cable.rows[1].INSTR
+      result.rows[i]["DEST_LOC"] = cable.rows[1].LOC;
+      result.rows[i]["DEST_RACK"] = cable.rows[1].RACK;
+      result.rows[i]["DEST_SIDE"] = cable.rows[1].SIDE;
+      result.rows[i]["DEST_ELE"] = cable.rows[1].ELE;
+      result.rows[i]["DEST_SLOT"] = cable.rows[1].SLOT;
+      result.rows[i]["DEST_CONNNUM"] = cable.rows[1].CONNUM;
+      result.rows[i]["DEST_PINLIST"] = cable.rows[1].PINLIST;
+      result.rows[i]["DEST_CONNTYPE"] = cable.rows[1].CONNTYPE;
+      result.rows[i]["DEST_STATION"] = cable.rows[1].STATION;
+      result.rows[i]["DEST_INSTR"] = cable.rows[1].INSTR;
       const cableArea = await db.execute(
         `SELECT * FROM CABLE_LISTING WHERE LIST_NO = '${result.rows[i]["LIST_NO"]}'`
       );
-      result.rows[i]["LIST_TITLE"] = cableArea.rows[0]["LIST_TITLE"]
-      result.rows[i]["AREACODE"] = cableArea.rows[0]["AREA_CODE"]
+      result.rows[i]["LIST_TITLE"] = cableArea.rows[0]["LIST_TITLE"];
+      result.rows[i]["AREACODE"] = cableArea.rows[0]["AREA_CODE"];
+      const cableExtra = await db.execute(
+        `SELECT * FROM CABLE_INSTALL_UPLOAD_EXTRA WHERE CABLENUM = '${result.rows[i]["CABLENUM"]}'`
+      );
+      if (cableExtra.rows.length > 0) {
+        result.rows[i]["SECTOR_AREA_SOURCE"] =
+          cableExtra.rows[0].SECTOR_AREA_SOURCE;
+        result.rows[i]["BEAM_AREA"] = cableExtra.rows[0].BEAMLINE_AREA;
+
+        result.rows[i]["SECTOR_GROUP"] = cableExtra.rows[0].SECTOR_GROUP;
+
+        result.rows[i]["PENETRATION"] = cableExtra.rows[0].PENETRATION;
+
+        result.rows[i]["PENETRATION_II"] = cableExtra.rows[0].PENETRATION_II;
+
+        result.rows[i]["PROJECT"] = cableExtra.rows[0].PROJECT;
+
+        result.rows[i]["INSTALLED_LENGTH"] =
+          cableExtra.rows[0].INSTALLED_LENGTH;
+
+        result.rows[i]["AREA_CODE"] = cableExtra.rows[0].AREA_CODE;
+
+        result.rows[i]["PHASE"] = cableExtra.rows[0].PHASE;
+
+        result.rows[i]["SECTOR_AREA_DEST"] =
+          cableExtra.rows[0].SECTOR_AREA_DEST;
+
+        result.rows[i]["MIN_LENGTH"] = cableExtra.rows[0].MIN_LENGTH;
+
+        result.rows[i]["MAX_LENGTH"] = cableExtra.rows[0].MAX_LENGTH;
+
+        result.rows[i]["ADDNL_LENGTH"] = cableExtra.rows[0].ADDNL_LENGTH;
+      }
     }
-    console.log(result.rows)
+
     const resultCount = await db.execute(
       `SELECT COUNT(*) as count FROM ${table} WHERE  CABLEINV.${filter} LIKE '${txt}%'`
     );
-    console.log(result.rows)
-    res.json({cables: result.rows,total:resultCount.rows[0].COUNT,columnInfo:[]})
-   
-    
+    console.log(result.rows);
+    res.json({
+      cables: result.rows,
+      total: resultCount.rows[0].COUNT,
+      columnInfo: [],
+    });
   } catch (err) {
     console.error(err);
   }
-  console.log("Stop")
+  console.log("Stop");
 
   if (db) {
     try {
@@ -153,153 +188,189 @@ router.get("/getCablesInventory", cors(), async (req,res) => {
     } catch (err) {
       console.error(err);
     }
-  }4
-
- 
-})
-router.get("/getCables", cors(), async (req,res) => {
-  
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    let table = req.query.table;
-    let offset = req.query.offset;
-    let user = req.query.user;
-    let rows  = req.query.rows;
-    console.log(rows)
-      let db;
-    try {
-      db = await oracledb.getConnection(conDetails);
-      const resultTest = await db.execute(
-        `SELECT column_name, data_type, data_length FROM USER_TAB_COLUMNS WHERE table_name = '${table}'`
-      );
-      // console.log(resultTest.rows)
-        var columnInfo = {}
-      for(var i = 0; i < resultTest.rows.length; i++){
-        columnInfo[resultTest.rows[i].COLUMN_NAME] = resultTest.rows[i]
-      }
-      console.log("ROWS" + rows)
-     if(table == 'CABLEINV'){
-
+  }
+  4;
+});
+router.get("/getCables", cors(), async (req, res) => {
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  let table = req.query.table;
+  let offset = req.query.offset;
+  let user = req.query.user;
+  let rows = req.query.rows;
+  console.log(rows);
+  let db;
+  try {
+    db = await oracledb.getConnection(conDetails);
+    const resultTest = await db.execute(
+      `SELECT column_name, data_type, data_length FROM USER_TAB_COLUMNS WHERE table_name = '${table}'`
+    );
+    // console.log(resultTest.rows)
+    var columnInfo = {};
+    for (var i = 0; i < resultTest.rows.length; i++) {
+      columnInfo[resultTest.rows[i].COLUMN_NAME] = resultTest.rows[i];
+    }
+    console.log("ROWS" + rows);
+    if (table == "CABLEINV") {
       // get 10 cables
-      // go through each cable 
+      // go through each cable
       // find it in the conninv
       // append to a result array with the newly formatted cable
 
-
       const result = await db.execute(
-        `SELECT * FROM ${table} OFFSET ${offset} ROWS FETCH FIRST '${rows}' ROWS ONLY`
+        `SELECT * FROM CABLEINV a FULL JOIN CABLE_INSTALL_UPLOAD_EXTRA b ON a.CABLENUM = b.CABLENUM OFFSET ${offset} ROWS FETCH FIRST '${rows}' ROWS ONLY`
       );
-        let arr = []
-      for(var i = 0; i < result.rows.length; i++){
+      console.log(result.rows);
+      let arr = [];
+      for (var i = 0; i < result.rows.length; i++) {
         const cable = await db.execute(
           `SELECT * FROM CONNINV WHERE CABLENUM = '${result.rows[i].CABLENUM}'`
         );
-        result.rows[i]["ORIGIN_LOC"] = cable.rows[0].LOC
-        result.rows[i]["ORIGIN_RACK"] = cable.rows[0].RACK
-        result.rows[i]["ORIGIN_SIDE"] = cable.rows[0].SIDE
-        result.rows[i]["ORIGIN_ELE"] = cable.rows[0].ELE
-        result.rows[i]["ORIGIN_SLOT"] = cable.rows[0].SLOT
-        result.rows[i]["ORIGIN_CONNNUM"] = cable.rows[0].CONNUM
-        result.rows[i]["ORIGIN_PINLIST"] = cable.rows[0].PINLIST
-        result.rows[i]["ORIGIN_CONNTYPE"] = cable.rows[0].CONNTYPE
-        result.rows[i]["ORIGIN_STATION"] = cable.rows[0].STATION
-        result.rows[i]["ORIGIN_INSTR"] = cable.rows[0].INSTR
+        result.rows[i]["ORIGIN_LOC"] = cable.rows[0].LOC;
+        result.rows[i]["ORIGIN_RACK"] = cable.rows[0].RACK;
+        result.rows[i]["ORIGIN_SIDE"] = cable.rows[0].SIDE;
+        result.rows[i]["ORIGIN_ELE"] = cable.rows[0].ELE;
+        result.rows[i]["ORIGIN_SLOT"] = cable.rows[0].SLOT;
+        result.rows[i]["ORIGIN_CONNNUM"] = cable.rows[0].CONNUM;
+        result.rows[i]["ORIGIN_PINLIST"] = cable.rows[0].PINLIST;
+        result.rows[i]["ORIGIN_CONNTYPE"] = cable.rows[0].CONNTYPE;
+        result.rows[i]["ORIGIN_STATION"] = cable.rows[0].STATION;
+        result.rows[i]["ORIGIN_INSTR"] = cable.rows[0].INSTR;
 
-        result.rows[i]["DEST_LOC"] = cable.rows[1].LOC
-        result.rows[i]["DEST_RACK"] = cable.rows[1].RACK
-        result.rows[i]["DEST_SIDE"] = cable.rows[1].SIDE
-        result.rows[i]["DEST_ELE"] = cable.rows[1].ELE
-        result.rows[i]["DEST_SLOT"] = cable.rows[1].SLOT
-        result.rows[i]["DEST_CONNNUM"] = cable.rows[1].CONNUM
-        result.rows[i]["DEST_PINLIST"] = cable.rows[1].PINLIST
-        result.rows[i]["DEST_CONNTYPE"] = cable.rows[1].CONNTYPE
-        result.rows[i]["DEST_STATION"] = cable.rows[1].STATION
-        result.rows[i]["DEST_INSTR"] = cable.rows[1].INSTR
+        result.rows[i]["DEST_LOC"] = cable.rows[1].LOC;
+        result.rows[i]["DEST_RACK"] = cable.rows[1].RACK;
+        result.rows[i]["DEST_SIDE"] = cable.rows[1].SIDE;
+        result.rows[i]["DEST_ELE"] = cable.rows[1].ELE;
+        result.rows[i]["DEST_SLOT"] = cable.rows[1].SLOT;
+        result.rows[i]["DEST_CONNNUM"] = cable.rows[1].CONNUM;
+        result.rows[i]["DEST_PINLIST"] = cable.rows[1].PINLIST;
+        result.rows[i]["DEST_CONNTYPE"] = cable.rows[1].CONNTYPE;
+        result.rows[i]["DEST_STATION"] = cable.rows[1].STATION;
+        result.rows[i]["DEST_INSTR"] = cable.rows[1].INSTR;
         const cableArea = await db.execute(
           `SELECT * FROM CABLE_LISTING WHERE LIST_NO = '${result.rows[i]["LIST_NO"]}'`
         );
-        result.rows[i]["LIST_TITLE"] = cableArea.rows[0]["LIST_TITLE"]
-        result.rows[i]["AREACODE"] = cableArea.rows[0]["AREA_CODE"]
+        result.rows[i]["USERID_LIST_TITLE"] = cableArea.rows[0]["LIST_TITLE"];
+        result.rows[i]["AREACODE"] = cableArea.rows[0]["AREA_CODE"];
+
+        const cableExtra = await db.execute(
+          `SELECT * FROM CABLE_INSTALL_UPLOAD_EXTRA WHERE CABLENUM = '${result.rows[i]["CABLENUM"]}'`
+        );
+        if (cableExtra.rows.length > 0) {
+          result.rows[i]["SECTOR_AREA_SOURCE"] =
+            cableExtra.rows[0].SECTOR_AREA_SOURCE;
+          result.rows[i]["BEAM_AREA"] = cableExtra.rows[0].BEAMLINE_AREA;
+
+          result.rows[i]["SECTOR_GROUP"] = cableExtra.rows[0].SECTOR_GROUP;
+
+          result.rows[i]["PENETRATION"] = cableExtra.rows[0].PENETRATION;
+
+          result.rows[i]["PENETRATION_II"] = cableExtra.rows[0].PENETRATION_II;
+
+          result.rows[i]["PROJECT"] = cableExtra.rows[0].PROJECT;
+
+          result.rows[i]["INSTALLED_LENGTH"] =
+            cableExtra.rows[0].INSTALLED_LENGTH;
+
+          result.rows[i]["AREA_CODE"] = cableExtra.rows[0].AREA_CODE;
+
+          result.rows[i]["PHASE"] = cableExtra.rows[0].PHASE;
+
+          result.rows[i]["SECTOR_AREA_DEST"] =
+            cableExtra.rows[0].SECTOR_AREA_DEST;
+
+          result.rows[i]["MIN_LENGTH"] = cableExtra.rows[0].MIN_LENGTH;
+
+          result.rows[i]["MAX_LENGTH"] = cableExtra.rows[0].MAX_LENGTH;
+
+          result.rows[i]["ADDNL_LENGTH"] = cableExtra.rows[0].ADDNL_LENGTH;
+        }
       }
       const resultCount = await db.execute(
         `SELECT COUNT(*) as count FROM ${table}`
       );
-      
-      res.json({cables: result.rows,total:resultCount.rows[0].COUNT,columnInfo:columnInfo})
-     }else if(table == 'SMARTCAPTAR_UPLOAD'){
-      console.log("USER" +user)
+
+      res.json({
+        cables: result.rows,
+        total: resultCount.rows[0].COUNT,
+        columnInfo: columnInfo,
+      });
+    } else if (table == "SMARTCAPTAR_UPLOAD") {
+      console.log("USER" + user);
       const result = await db.execute(
         `SELECT * from SMARTCAPTAR_UPLOAD WHERE ENTEREDBY = '${user}' UNION SELECT * FROM SMARTCAPTAR_QUEUE WHERE ENTEREDBY = '${user}'`
       );
       const resultCount = await db.execute(
         `SELECT COUNT(*) as count FROM ${table}`
       );
-  
 
       let cables = result.rows;
-      for(var i = 0; i < cables.length; i++){
+      for (var i = 0; i < cables.length; i++) {
         const QAResult = await db.execute(
           `SELECT COMPAT FROM SMARTCAPTAR_COMPATIBILITY WHERE CABLETYPE = '${cables[i].CABLETYPE}'`
         );
-        cables[i].DUPLICATES = QAResult.rows
-        if(QAResult.rows[0] == undefined || !QAResult.rows[0].COMPAT.split(',').includes(cables[i].ORIGIN_CONNTYPE)){
-        cables[i].ORIGIN_TYPEERR = true;
-      }else{
-        cables[i].ORIGIN_TYPEERR = false;
+        cables[i].DUPLICATES = QAResult.rows;
+        if (
+          QAResult.rows[0] == undefined ||
+          !QAResult.rows[0].COMPAT.split(",").includes(
+            cables[i].ORIGIN_CONNTYPE
+          )
+        ) {
+          cables[i].ORIGIN_TYPEERR = true;
+        } else {
+          cables[i].ORIGIN_TYPEERR = false;
+        }
+        if (
+          QAResult.rows[0] == undefined ||
+          !QAResult.rows[0].COMPAT.split(",").includes(cables[i].DEST_CONNTYPE)
+        ) {
+          cables[i].DEST_TYPEERR = true;
+        } else {
+          cables[i].DEST_TYPEERR = false;
+        }
       }
-      if(QAResult.rows[0] == undefined || !QAResult.rows[0].COMPAT.split(',').includes(cables[i].DEST_CONNTYPE)){
-        cables[i].DEST_TYPEERR = true;
-      }else{
-        cables[i].DEST_TYPEERR = false;
-      }
-  
-  
-      }
-      res.json({cables: cables,total:resultCount.rows[0].COUNT,columnInfo:columnInfo})
-     }else if(table == "SMARTCAPTAR_HISTORY"){
+      res.json({
+        cables: cables,
+        total: resultCount.rows[0].COUNT,
+        columnInfo: columnInfo,
+      });
+    } else if (table == "SMARTCAPTAR_HISTORY") {
       const result = await db.execute(
         `SELECT * FROM SMARTCAPTAR_HISTORY WHERE CABLENUM = '${req.query.CABLENUM}' OFFSET ${offset} ROWS FETCH FIRST 10 ROWS ONLY`
       );
       const resultCount = await db.execute(
         `SELECT COUNT(*) as count FROM ${table}`
       );
-      console.log(result.rows)
+      console.log(result.rows);
 
-        
-      res.json({cables: result.rows,total:resultCount.rows[0].COUNT})
-     }
-     else{
-      console.log("TEST " + user)
+      res.json({ cables: result.rows, total: resultCount.rows[0].COUNT });
+    } else {
+      console.log("TEST " + user);
       let cables = [];
-      if(user != "ADMIN"){
-      //get user projects
-      const projectsQuery = await db.execute(
-        `SELECT PROJECTS FROM SMARTCAPTAR_USERS WHERE USERNAME = '${user}'`
-      );
-      projects = !projectsQuery.rows[0].PROJECTS ? [] : projectsQuery.rows[0].PROJECTS.split(",")
-      //getCables with that project
-      for(var i = 0; i < projects.length; i++){
-        console.log(projects[i])
-        const result = await db.execute(
-          `SELECT * FROM SMARTCAPTAR_QUEUE WHERE AREACODE = '${projects[i]}'`
+      if (user != "ADMIN") {
+        //get user projects
+        const projectsQuery = await db.execute(
+          `SELECT PROJECTS FROM SMARTCAPTAR_USERS WHERE USERNAME = '${user}'`
         );
-       
-        cables = [
-          ...cables,
-          ...result.rows
-        ]
-  
+        projects = !projectsQuery.rows[0].PROJECTS
+          ? []
+          : projectsQuery.rows[0].PROJECTS.split(",");
+        //getCables with that project
+        for (var i = 0; i < projects.length; i++) {
+          console.log(projects[i]);
+          const result = await db.execute(
+            `SELECT * FROM SMARTCAPTAR_QUEUE WHERE AREACODE = '${projects[i]}'`
+          );
+
+          cables = [...cables, ...result.rows];
+        }
+      } else {
+        console.log("QUEUE");
+        const result = await db.execute(`SELECT * FROM SMARTCAPTAR_QUEUE`);
+        cables = result.rows;
       }
-    }else{
-      console.log("QUEUE")
-      const result = await db.execute(
-        `SELECT * FROM SMARTCAPTAR_QUEUE`
-      );
-      cables = result.rows
-    }
-      
+
       //append to array
-      
 
       // const result = await db.execute(
       //   `SELECT * FROM ${table}`
@@ -307,59 +378,63 @@ router.get("/getCables", cors(), async (req,res) => {
       const resultCount = await db.execute(
         `SELECT COUNT(*) as count FROM ${table}`
       );
-      
-  
-      
-      for(var i = 0; i < cables.length; i++){
+
+      for (var i = 0; i < cables.length; i++) {
         const QAResult = await db.execute(
           `SELECT COMPAT FROM SMARTCAPTAR_COMPATIBILITY WHERE CABLETYPE = '${cables[i].CABLETYPE}'`
         );
-        cables[i].DUPLICATES = QAResult.rows
-        if(QAResult.rows[0] == undefined || !QAResult.rows[0].COMPAT.split(',').includes(cables[i].ORIGIN_CONNTYPE)){
+        cables[i].DUPLICATES = QAResult.rows;
+        if (
+          QAResult.rows[0] == undefined ||
+          !QAResult.rows[0].COMPAT.split(",").includes(
+            cables[i].ORIGIN_CONNTYPE
+          )
+        ) {
           cables[i].ORIGIN_TYPEERR = true;
-        }else{
+        } else {
           cables[i].ORIGIN_TYPEERR = false;
         }
-        if(QAResult.rows[0] == undefined || !QAResult.rows[0].COMPAT.split(',').includes(cables[i].DEST_CONNTYPE)){
+        if (
+          QAResult.rows[0] == undefined ||
+          !QAResult.rows[0].COMPAT.split(",").includes(cables[i].DEST_CONNTYPE)
+        ) {
           cables[i].DEST_TYPEERR = true;
-        }else{
+        } else {
           cables[i].DEST_TYPEERR = false;
         }
-  
-  
       }
-      res.json({cables: cables,total:resultCount.rows[0].COUNT,columnInfo:columnInfo})
-     }
-      
+      res.json({
+        cables: cables,
+        total: resultCount.rows[0].COUNT,
+        columnInfo: columnInfo,
+      });
+    }
+  } catch (err) {
+    console.error(err);
+  }
+  console.log("Stop");
+
+  if (db) {
+    try {
+      await db.close();
     } catch (err) {
       console.error(err);
     }
-    console.log("Stop")
-
-    if (db) {
-      try {
-        await db.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-   
-})
-router.get("/getCableTypes", cors(), async (req,res) => {
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    let db;
+  }
+});
+router.get("/getCableTypes", cors(), async (req, res) => {
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  let db;
   try {
     db = await oracledb.getConnection(conDetails);
-   
+
     const result = await db.execute(
       `SELECT DISTINCT(CABLETYPE) FROM SMARTCAPTAR_COMPATIBILITY`
     );
-    let sortedRes = result.rows
-    await sortedRes.sort((a, b) => a.CABLETYPE.localeCompare(b.CABLETYPE))
-    res.json({types: sortedRes})
-    
+    let sortedRes = result.rows;
+    await sortedRes.sort((a, b) => a.CABLETYPE.localeCompare(b.CABLETYPE));
+    res.json({ types: sortedRes });
   } catch (err) {
     console.error(err);
   }
@@ -371,45 +446,22 @@ router.get("/getCableTypes", cors(), async (req,res) => {
       console.error(err);
     }
   }
- 
-})
-router.get("/getConnTypes", cors(),async (req,res) => {
+});
+router.get("/getConnTypes", cors(), async (req, res) => {
   let db;
   const oracledb = req.db;
-const conDetails = req.conDetails;
-try {
-  db = await oracledb.getConnection(conDetails);
-  const result = await db.execute(
-    `SELECT COMPAT FROM SMARTCAPTAR_COMPATIBILITY WHERE CABLETYPE = '${req.query.cableType}'`
-  );
-
-
-  res.json({types: result.rows[0].COMPAT.split(",").sort((a, b) => a.localeCompare(b))})
-  
-} catch (err) {
-  console.error(err);
-}
-
-if (db) {
-  try {
-    await db.close();
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-})
-router.get("/getCompatibility",cors(), async (req,res) => {
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    let db;
+  const conDetails = req.conDetails;
   try {
     db = await oracledb.getConnection(conDetails);
-   
     const result = await db.execute(
-      `SELECT * FROM SMARTCAPTAR_COMPATIBILITY`
+      `SELECT COMPAT FROM SMARTCAPTAR_COMPATIBILITY WHERE CABLETYPE = '${req.query.cableType}'`
     );
-    res.json({compat: result.rows})
+
+    res.json({
+      types: result.rows[0].COMPAT.split(",").sort((a, b) =>
+        a.localeCompare(b)
+      ),
+    });
   } catch (err) {
     console.error(err);
   }
@@ -421,40 +473,59 @@ router.get("/getCompatibility",cors(), async (req,res) => {
       console.error(err);
     }
   }
- 
-})
-router.get("/getHistory", cors(),async (req,res) => {
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    let offset = req.query.offset
-      let db;
+});
+router.get("/getCompatibility", cors(), async (req, res) => {
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  let db;
+  try {
+    db = await oracledb.getConnection(conDetails);
+
+    const result = await db.execute(`SELECT * FROM SMARTCAPTAR_COMPATIBILITY`);
+    res.json({ compat: result.rows });
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (db) {
     try {
-      db = await oracledb.getConnection(conDetails);
-      const result = await db.execute(
-        `SELECT DISTINCT(CABLENUM) FROM SMARTCAPTAR_HISTORY OFFSET ${offset} ROWS FETCH FIRST 10 ROWS ONLY`
-      );
-      const resultCount = await db.execute(
-        `SELECT COUNT(DISTINCT(CABLENUM)) as count FROM SMARTCAPTAR_HISTORY`
-      );
-      res.json({cables: result.rows,total:resultCount.rows[0].COUNT})
+      await db.close();
     } catch (err) {
       console.error(err);
     }
-  
-    if (db) {
-      try {
-        await db.close();
-      } catch (err) {
-        console.error(err);
-      }
+  }
+});
+router.get("/getHistory", cors(), async (req, res) => {
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  let offset = req.query.offset;
+  let db;
+  try {
+    db = await oracledb.getConnection(conDetails);
+    const result = await db.execute(
+      `SELECT DISTINCT(CABLENUM) FROM SMARTCAPTAR_HISTORY OFFSET ${offset} ROWS FETCH FIRST 10 ROWS ONLY`
+    );
+    const resultCount = await db.execute(
+      `SELECT COUNT(DISTINCT(CABLENUM)) as count FROM SMARTCAPTAR_HISTORY`
+    );
+    res.json({ cables: result.rows, total: resultCount.rows[0].COUNT });
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (db) {
+    try {
+      await db.close();
+    } catch (err) {
+      console.error(err);
     }
-   
-})
-router.get("/getCableHistory", cors(),async (req,res) => {
-    let cable = req.query.cable;
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    let db;
+  }
+});
+router.get("/getCableHistory", cors(), async (req, res) => {
+  let cable = req.query.cable;
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  let db;
   try {
     db = await oracledb.getConnection(conDetails);
     const result = await db.execute(
@@ -463,13 +534,12 @@ router.get("/getCableHistory", cors(),async (req,res) => {
     const resultCount = await db.execute(
       `SELECT COUNT(*) as count FROM SMARTCAPTAR_HISTORY`
     );
-    
-    res.json({cables: result.rows,total:resultCount.rows[0].COUNT})
-   
+
+    res.json({ cables: result.rows, total: resultCount.rows[0].COUNT });
   } catch (err) {
     console.error(err);
   }
-  
+
   if (db) {
     try {
       await db.close();
@@ -477,39 +547,41 @@ router.get("/getCableHistory", cors(),async (req,res) => {
       console.error(err);
     }
   }
-  
-})
-router.post("/uploadCables",cors(), async (req,res) => {
-    //New variable for cables taht are being sent 
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    let cablesUpload = req.body.cables
-    let user= req.body.user;
-    oracledb.autoCommit = true;
-      let db;
+});
+router.post("/uploadCables", cors(), async (req, res) => {
+  //New variable for cables taht are being sent
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  let cablesUpload = req.body.cables;
+  let user = req.body.user;
+  oracledb.autoCommit = true;
+  let db;
 
-    try {   
-      db = await oracledb.getConnection(conDetails);
-       for(var i = 0; i < cablesUpload.length; i++){
-        let NEWCABLENUM;
-        if(cablesUpload[i]["CABLENUM"] == 'NEW CABLE'){
-
-        const cableNum = await db.execute(`SELECT * FROM SMARTCAPTAR_PROJECTS WHERE PROJECT_NAME = '${cablesUpload[i]["AREACODE"]}'`)
-        let numCables = cableNum.rows[0].NUM_CABLES
-        let prefix = cableNum.rows[0].PREFIX
+  try {
+    db = await oracledb.getConnection(conDetails);
+    for (var i = 0; i < cablesUpload.length; i++) {
+      let NEWCABLENUM;
+      if (cablesUpload[i]["CABLENUM"] == "NEW CABLE") {
+        const cableNum = await db.execute(
+          `SELECT * FROM SMARTCAPTAR_PROJECTS WHERE PROJECT_NAME = '${cablesUpload[i]["AREACODE"]}'`
+        );
+        let numCables = cableNum.rows[0].NUM_CABLES;
+        let prefix = cableNum.rows[0].PREFIX;
         var string = "" + numCables;
         var pad = "0000";
         n = pad.substring(0, pad.length - string.length) + string;
-        NEWCABLENUM = `${prefix + n}`
-        await db.execute(`UPDATE SMARTCAPTAR_PROJECTS SET NUM_CABLES = '${numCables + 1}' WHERE PROJECT_NAME = '${cablesUpload[i]["AREACODE"]}'`)
+        NEWCABLENUM = `${prefix + n}`;
+        await db.execute(
+          `UPDATE SMARTCAPTAR_PROJECTS SET NUM_CABLES = '${
+            numCables + 1
+          }' WHERE PROJECT_NAME = '${cablesUpload[i]["AREACODE"]}'`
+        );
+      } else {
+        NEWCABLENUM = cablesUpload[i]["CABLENUM"];
+      }
 
-        }else{
-          NEWCABLENUM = cablesUpload[i]["CABLENUM"]
-        }
-
-       
-        const result = await db.execute(
-          `INSERT INTO SMARTCAPTAR_UPLOAD (
+      const result = await db.execute(
+        `INSERT INTO SMARTCAPTAR_UPLOAD (
             CABLENUM,
             CABLETYPE,
             JOBNUM,
@@ -601,34 +673,37 @@ router.post("/uploadCables",cors(), async (req,res) => {
           '${cablesUpload[i]["PENETRATION_2"]}',
           '${cablesUpload[i]["MIN_LENGTH"]}',
           '${cablesUpload[i]["MAX_LENGTH"]}',
-          '${cablesUpload[i]["ADDNL_LENGTH"]}')`);
-      }
-      res.json({msg: "SUCCESS"})
+          '${cablesUpload[i]["ADDNL_LENGTH"]}')`
+      );
+    }
+    res.json({ msg: "SUCCESS" });
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (db) {
+    try {
+      await db.close();
     } catch (err) {
       console.error(err);
     }
-  
-    if (db) {
-      try {
-        await db.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-})
+  }
+});
 
-router.post("/createCable",cors(), async (req,res) => {
-  //New variable for cables taht are being sent 
+router.post("/createCable", cors(), async (req, res) => {
+  //New variable for cables taht are being sent
   const oracledb = req.db;
   const conDetails = req.conDetails;
-  let cable = req.body.cable
-  let user= req.body.user
+  let cable = req.body.cable;
+  let user = req.body.user;
   oracledb.autoCommit = true;
-    let db;
-    var admins = JSON.stringify({"sung":false,"seano":false})
-  try {   
+  let db;
+  var admins = JSON.stringify({ sung: false, seano: false });
+  try {
     db = await oracledb.getConnection(conDetails);
-    await db.execute(`UPDATE SMARTCAPTAR_PROJECTS SET NUM_CABLES =NUM_CABLES+1  WHERE PROJECT_NAME = '${cable.AREACODE}'`)       
+    await db.execute(
+      `UPDATE SMARTCAPTAR_PROJECTS SET NUM_CABLES =NUM_CABLES+1  WHERE PROJECT_NAME = '${cable.AREACODE}'`
+    );
 
     const result = await db.execute(
       `INSERT INTO SMARTCAPTAR_UPLOAD (
@@ -680,7 +755,7 @@ router.post("/createCable",cors(), async (req,res) => {
         ADDNL_LENGTH,
         REVISION ) VALUES (
         '${admins}',
-        '${'NEW'}',
+        '${"NEW"}',
         '${user}',
         '${cable.CABLENUM}',
         '${cable.CABLETYPE}',
@@ -725,77 +800,78 @@ router.post("/createCable",cors(), async (req,res) => {
                   '${cable.MIN_LENGTH}',
                     '${cable.MAX_LENGTH}',
               '${cable.ADDNL_LENGTH}',
-                  '${cable.REVISION}')`);
-      // const result = await db.execute(
-      //   `INSERT INTO SMARTCAPTAR_UPLOAD 
-      //   (STATUS,
-      //     ENTEREDBY,
-      //     CABLENUM,
-      //     CABLETYPE,
-      //     JOBNUM,
-      //     ENTEREDBY,
-      //     DATEENT,
-      //     FUNC,
-      //     ACTIONREQ,
-      //     SYSTEM,
-      //     LENGTH,
-      //     ROUTING,
-      //     LIST_NO,
-      //     DWGNUM,
-      //     CABLEINV_ID,
-      //     CREATED_BY,
-      //     CREATED_DATE,
-      //     MODIFIED_BY,
-      //     MODIFIED_DATE,
-      //     DRAWING_TITLE,
-      //     STATUS,
-      //     AREACODE,
-      //     LOC,
-      //     RACK,
-      //     ELE,
-      //     SLOT,
-      //     CONNUM,
-      //     PINLIST,
-      //     CONNTYPE,
-      //     STATION,
-      //     INSTR,
-      //     STATION_OLD,
-      //     APPROVERS)
-      //   VALUES 
-      //   ('${"NEW"}','${cable["CABLENUM"]}','${cable["CABLENUM"]}',
-      //   '${cable["CABLETYPE"]}',
-      //   '${cable["JOBNUM"]}',
-      //   '${user}',
-      //   TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM'),
-      //   '${cable["FUNC"]}',
-      //   '1',
-      //   '',
-      //   '${cable["LENGTH"]}',
-      //   '${cable["ROUTING"]}',
-      //   '',
-      //   '',
-      //   '',
-      //   '${user}',
-      //   TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM'),
-      //   '${user}',
-      //   TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM'),
-      //   '${cable["Drawing Title"]}',
-      //   'NEW',
-      //   '${cable["AREACODE"]}',
-      //   '${cable["LOC"]}',
-      //   '${cable["RACK"]}',
-      //   '${cable["ELE"]}',
-      //   '${cable["SLOT"]}',
-      //   '${cable["CONNUM"]}',
-      //   '${cable["PINLIST"]}',
-      //   '${cable["CONNTYPE"]}',
-      //   '${cable["STATION"]}',
-      //   '${cable["INSTR"]}',
-      //   '1',
-      //   '${admins}'
-      //  )`);
-    
-    res.json({msg: "SUCCESS"})
+                  '${cable.REVISION}')`
+    );
+    // const result = await db.execute(
+    //   `INSERT INTO SMARTCAPTAR_UPLOAD
+    //   (STATUS,
+    //     ENTEREDBY,
+    //     CABLENUM,
+    //     CABLETYPE,
+    //     JOBNUM,
+    //     ENTEREDBY,
+    //     DATEENT,
+    //     FUNC,
+    //     ACTIONREQ,
+    //     SYSTEM,
+    //     LENGTH,
+    //     ROUTING,
+    //     LIST_NO,
+    //     DWGNUM,
+    //     CABLEINV_ID,
+    //     CREATED_BY,
+    //     CREATED_DATE,
+    //     MODIFIED_BY,
+    //     MODIFIED_DATE,
+    //     DRAWING_TITLE,
+    //     STATUS,
+    //     AREACODE,
+    //     LOC,
+    //     RACK,
+    //     ELE,
+    //     SLOT,
+    //     CONNUM,
+    //     PINLIST,
+    //     CONNTYPE,
+    //     STATION,
+    //     INSTR,
+    //     STATION_OLD,
+    //     APPROVERS)
+    //   VALUES
+    //   ('${"NEW"}','${cable["CABLENUM"]}','${cable["CABLENUM"]}',
+    //   '${cable["CABLETYPE"]}',
+    //   '${cable["JOBNUM"]}',
+    //   '${user}',
+    //   TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM'),
+    //   '${cable["FUNC"]}',
+    //   '1',
+    //   '',
+    //   '${cable["LENGTH"]}',
+    //   '${cable["ROUTING"]}',
+    //   '',
+    //   '',
+    //   '',
+    //   '${user}',
+    //   TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM'),
+    //   '${user}',
+    //   TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM'),
+    //   '${cable["Drawing Title"]}',
+    //   'NEW',
+    //   '${cable["AREACODE"]}',
+    //   '${cable["LOC"]}',
+    //   '${cable["RACK"]}',
+    //   '${cable["ELE"]}',
+    //   '${cable["SLOT"]}',
+    //   '${cable["CONNUM"]}',
+    //   '${cable["PINLIST"]}',
+    //   '${cable["CONNTYPE"]}',
+    //   '${cable["STATION"]}',
+    //   '${cable["INSTR"]}',
+    //   '1',
+    //   '${admins}'
+    //  )`);
+
+    res.json({ msg: "SUCCESS" });
   } catch (err) {
     console.error(err);
   }
@@ -807,359 +883,379 @@ router.post("/createCable",cors(), async (req,res) => {
       console.error(err);
     }
   }
-})
-router.post("/uploadCableType",cors(), async (req,res) => {
-    //New variable for cables taht are being sent 
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    let CABLETYPE = req.body.CABLETYPE
-    let COMPAT= req.body.COMPAT
-    oracledb.autoCommit = true;
-      let db;
-    try {   
-      db = await oracledb.getConnection(conDetails);
-      
-        const result = await db.execute(
-          `INSERT INTO SMARTCAPTAR_COMPATIBILITY (CABLETYPE,COMPAT) VALUES  ('${CABLETYPE}','${COMPAT}')`);
-      
-      res.json({msg: "SUCCESS"})
-    } catch (err) {
-      console.error(err);
-    }
-  
-    if (db) {
-      try {
-        await db.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-})
-router.post("/checkCables",cors(), async (req,res) => {
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    //New variable for cables taht are being sent 
-    let cablesUpload = req.body.cables
-    let duplicateCables = [];
-    oracledb.autoCommit = true;
-      let db;
-    try {   
-      db = await oracledb.getConnection(conDetails);
-      //CHECK WHICH CABLES EXISTS ALREADY
-      for(var i = 0; i < cablesUpload.length; i++){
-        const result = await db.execute(`SELECT CABLENUM FROM SMARTCAPTAR_UPLOAD WHERE CABLENUM = '${cablesUpload[i]["CABLENUM"]}'`);
-       if(result.rows.length > 0){
-        duplicateCables.push(cablesUpload[i]["CABLENUM"]);
-       }
-      }
-      for(var i = 0; i < cablesUpload.length; i++){
-        const result = await db.execute(`SELECT CABLENUM FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i]["CABLENUM"]}'`);
-       if(result.rows.length > 0){
-        duplicateCables.push(cablesUpload[i]["CABLENUM"]);
-       }
-      }
-      res.json({duplicateCables: duplicateCables})
-    
-    } catch (err) {
-      console.error(err);
-    }
-  
-    if (db) {
-      try {
-        await db.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-})
-router.post("/queueCables",cors(), async (req,res) => {
-  console.log("Start")
-  console.time("timer")
+});
+router.post("/uploadCableType", cors(), async (req, res) => {
+  //New variable for cables taht are being sent
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  let CABLETYPE = req.body.CABLETYPE;
+  let COMPAT = req.body.COMPAT;
+  oracledb.autoCommit = true;
+  let db;
+  try {
+    db = await oracledb.getConnection(conDetails);
 
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    let cablesUpload = req.body.cables
-    oracledb.autoCommit = true;
-      let db;
-    try {   
-      db = await oracledb.getConnection(conDetails);
-      for(var i = 0; i < cablesUpload.length; i++){
-        const result = await db.execute(
-          `INSERT INTO SMARTCAPTAR_QUEUE
-          SELECT * FROM SMARTCAPTAR_UPLOAD WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`);
+    const result = await db.execute(
+      `INSERT INTO SMARTCAPTAR_COMPATIBILITY (CABLETYPE,COMPAT) VALUES  ('${CABLETYPE}','${COMPAT}')`
+    );
+
+    res.json({ msg: "SUCCESS" });
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (db) {
+    try {
+      await db.close();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+});
+router.post("/checkCables", cors(), async (req, res) => {
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  //New variable for cables taht are being sent
+  let cablesUpload = req.body.cables;
+  let duplicateCables = [];
+  oracledb.autoCommit = true;
+  let db;
+  try {
+    db = await oracledb.getConnection(conDetails);
+    //CHECK WHICH CABLES EXISTS ALREADY
+    for (var i = 0; i < cablesUpload.length; i++) {
+      const result = await db.execute(
+        `SELECT CABLENUM FROM SMARTCAPTAR_UPLOAD WHERE CABLENUM = '${cablesUpload[i]["CABLENUM"]}'`
+      );
+      if (result.rows.length > 0) {
+        duplicateCables.push(cablesUpload[i]["CABLENUM"]);
       }
-  
-      for(var i = 0; i < cablesUpload.length; i++){
-        const result = await db.execute(
-          `DELETE FROM SMARTCAPTAR_UPLOAD WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`);
+    }
+    for (var i = 0; i < cablesUpload.length; i++) {
+      const result = await db.execute(
+        `SELECT CABLENUM FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i]["CABLENUM"]}'`
+      );
+      if (result.rows.length > 0) {
+        duplicateCables.push(cablesUpload[i]["CABLENUM"]);
       }
-  
-      for(var i = 0; i < cablesUpload.length; i++){
-        const approversQuery = await db.execute(`SELECT ASSIGNED_USERS FROM SMARTCAPTAR_PROJECTS WHERE PROJECT_NAME = '${cablesUpload[i].AREACODE}'`)
-        let approvers = !approversQuery.rows[0].ASSIGNED_USERS ? [] : approversQuery.rows[0].ASSIGNED_USERS.split(",")
-        let admins = {}
-        for(var j = 0; j < approvers.length;j++){
-            admins[approvers[j]] = false
+    }
+    res.json({ duplicateCables: duplicateCables });
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (db) {
+    try {
+      await db.close();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+});
+router.post("/queueCables", cors(), async (req, res) => {
+  console.log("Start");
+  console.time("timer");
+
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  let cablesUpload = req.body.cables;
+  oracledb.autoCommit = true;
+  let db;
+  try {
+    db = await oracledb.getConnection(conDetails);
+    for (var i = 0; i < cablesUpload.length; i++) {
+      const result = await db.execute(
+        `INSERT INTO SMARTCAPTAR_QUEUE
+          SELECT * FROM SMARTCAPTAR_UPLOAD WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
+      );
+    }
+
+    for (var i = 0; i < cablesUpload.length; i++) {
+      const result = await db.execute(
+        `DELETE FROM SMARTCAPTAR_UPLOAD WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
+      );
+    }
+
+    for (var i = 0; i < cablesUpload.length; i++) {
+      const approversQuery = await db.execute(
+        `SELECT ASSIGNED_USERS FROM SMARTCAPTAR_PROJECTS WHERE PROJECT_NAME = '${cablesUpload[i].AREACODE}'`
+      );
+      let approvers = !approversQuery.rows[0].ASSIGNED_USERS
+        ? []
+        : approversQuery.rows[0].ASSIGNED_USERS.split(",");
+      let admins = {};
+      for (var j = 0; j < approvers.length; j++) {
+        admins[approvers[j]] = false;
+      }
+      admins = JSON.stringify(admins);
+
+      const result = await db.execute(
+        `UPDATE SMARTCAPTAR_QUEUE SET STATUS = 'PENDING', APPROVERS = '${admins}' WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
+  console.log("Stop");
+
+  if (db) {
+    try {
+      await db.close();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  console.timeEnd("timer");
+
+  res.json({ ms: "Completed" });
+});
+router.post("/deleteCables", cors(), async (req, res) => {
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  let cablesUpload = req.body.cables;
+  oracledb.autoCommit = true;
+  let db;
+  try {
+    db = await oracledb.getConnection(conDetails);
+    for (var i = 0; i < cablesUpload.length; i++) {
+      const result = await db.execute(
+        `DELETE FROM SMARTCAPTAR_UPLOAD WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (db) {
+    try {
+      await db.close();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  res.json({ ms: "Completed" });
+});
+router.get("/getRejectedCables", cors(), async (req, res) => {
+  //New variable for cables taht are being sent
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  oracledb.autoCommit = true;
+  let db;
+  try {
+    db = await oracledb.getConnection(conDetails);
+    const result = await db.execute(
+      `SELECT * FROM SMARTCAPTAR_UPLOAD WHERE STATUS = 'REJECTED'`
+    );
+    res.json({ cables: result.rows });
+  } catch (err) {
+    console.error(err);
+  }
+  if (db) {
+    try {
+      await db.close();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+});
+router.get("/getPendingCables", cors(), async (req, res) => {
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  //New variable for cables taht are being sent
+  oracledb.autoCommit = true;
+  let db;
+  try {
+    db = await oracledb.getConnection(conDetails);
+    const result = await db.execute(
+      `SELECT * FROM SMARTCAPTAR_QUEUE WHERE STATUS = 'PENDING'`
+    );
+    res.json({ cables: result.rows });
+  } catch (err) {
+    console.error(err);
+  }
+  if (db) {
+    try {
+      await db.close();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+});
+router.post("/rejectCables", cors(), async (req, res) => {
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  //New variable for cables taht are being sent
+  let cablesUpload = req.body.cables;
+  let comment = req.body.comment;
+  oracledb.autoCommit = true;
+  console.log(comment);
+  let db;
+  try {
+    db = await oracledb.getConnection(conDetails);
+
+    for (var i = 0; i < cablesUpload.length; i++) {
+      let temp = JSON.parse(cablesUpload[i].APPROVERS);
+      const newObj = Object.keys(temp).reduce((accumulator, key) => {
+        return { ...accumulator, [key]: false };
+      }, {});
+      await db.execute(
+        `UPDATE SMARTCAPTAR_QUEUE SET APPROVERS = '${JSON.stringify(
+          newObj
+        )}', STATUS = 'REJECTED',COMMENTS = '${comment}' WHERE CABLENUM = '${
+          cablesUpload[i].CABLENUM
+        }'`
+      );
+    }
+
+    for (var i = 0; i < cablesUpload.length; i++) {
+      const result = await db.execute(
+        `INSERT INTO SMARTCAPTAR_UPLOAD
+          SELECT * FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
+      );
+    }
+
+    for (var i = 0; i < cablesUpload.length; i++) {
+      const result = await db.execute(
+        `DELETE FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
+  if (db) {
+    try {
+      await db.close();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  res.json({ ms: "Completed" });
+});
+router.post("/cancelQueue", cors(), async (req, res) => {
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  //New variable for cables taht are being sent
+  let cablesNum = req.body.cableNum;
+  oracledb.autoCommit = true;
+  let db;
+  try {
+    db = await oracledb.getConnection(conDetails);
+
+    const resultOne = await db.execute(
+      `INSERT INTO SMARTCAPTAR_UPLOAD
+          SELECT * FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesNum}'`
+    );
+
+    const resultTwo = await db.execute(
+      `DELETE FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesNum}'`
+    );
+
+    const resultThree = await db.execute(
+      `UPDATE SMARTCAPTAR_UPLOAD SET STATUS = 'NEW' WHERE CABLENUM = '${cablesNum}'`
+    );
+  } catch (err) {
+    console.error(err);
+  }
+  if (db) {
+    try {
+      await db.close();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  res.json({ ms: "Completed" });
+});
+router.post("/approveCables", cors(), async (req, res) => {
+  //New variable for cables taht are being sent
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  let cablesUpload = req.body.cables;
+  let user = req.body.user;
+  oracledb.autoCommit = true;
+  let db;
+  try {
+    db = await oracledb.getConnection(conDetails);
+
+    const allEqual = (arr) => arr.every((v) => v === true);
+
+    for (var i = 0; i < cablesUpload.length; i++) {
+      if (user != "ADMIN") {
+        let temp = JSON.parse(cablesUpload[i].APPROVERS);
+        temp[user] = true;
+        cablesUpload[i].APPROVERS = JSON.stringify(temp);
+        console.log(temp);
+
+        if (allEqual(Object.values(temp))) {
+          console.log("HERE");
+
+          await db.execute(
+            `INSERT INTO SMARTCAPTAR_HISTORY
+          SELECT * FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
+          );
+          await db.execute(
+            `UPDATE SMARTCAPTAR_HISTORY SET STATUS = 'APPROVED', APPROVERS = '${cablesUpload[i].APPROVERS}', MODIFIED_DATE = TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM')  WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
+          );
+
+          await db.execute(
+            `DELETE FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
+          );
+        } else {
+          await db.execute(
+            `UPDATE SMARTCAPTAR_QUEUE SET APPROVERS = '${cablesUpload[i].APPROVERS}' WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
+          );
         }
-        admins = JSON.stringify(admins)
-
-        const result = await db.execute(
-          `UPDATE SMARTCAPTAR_QUEUE SET STATUS = 'PENDING', APPROVERS = '${admins}' WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-    console.log("Stop")
-
-    if (db) {
-      try {
-        await db.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    console.timeEnd("timer")
-
-   res.json({ms: "Completed"})
-})
-router.post("/deleteCables",cors(), async (req,res) => {
-  
-
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    let cablesUpload = req.body.cables
-    oracledb.autoCommit = true;
-      let db;
-    try {   
-      db = await oracledb.getConnection(conDetails);
-      for(var i = 0; i < cablesUpload.length; i++){
-        const result = await db.execute(
-          `DELETE FROM SMARTCAPTAR_UPLOAD WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-
-    if (db) {
-      try {
-        await db.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    
-
-   res.json({ms: "Completed"})
-})
-router.get("/getRejectedCables",cors(), async (req,res) => {
-    //New variable for cables taht are being sent
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    oracledb.autoCommit = true;
-      let db;
-    try {
-      db = await oracledb.getConnection(conDetails);
-        const result = await db.execute(
-          `SELECT * FROM SMARTCAPTAR_UPLOAD WHERE STATUS = 'REJECTED'`);
-          res.json({cables: result.rows})
-    } catch (err) {
-      console.error(err);
-    }
-    if (db) {
-      try {
-        await db.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-})
-router.get("/getPendingCables",cors(), async (req,res) => {
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    //New variable for cables taht are being sent
-      oracledb.autoCommit = true;
-      let db;
-    try {
-      db = await oracledb.getConnection(conDetails);
-        const result = await db.execute(
-          `SELECT * FROM SMARTCAPTAR_QUEUE WHERE STATUS = 'PENDING'`);
-          res.json({cables: result.rows})
-    } catch (err) {
-      console.error(err);
-    }
-    if (db) {
-      try {
-        await db.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-})
-router.post("/rejectCables",cors(), async (req,res) => { 
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    //New variable for cables taht are being sent 
-    let cablesUpload = req.body.cables
-    let comment = req.body.comment
-    oracledb.autoCommit = true;
-    console.log(comment)
-      let db;
-    try {   
-      db = await oracledb.getConnection(conDetails);
-  
-      for(var i = 0; i < cablesUpload.length; i++){
-        let temp = JSON.parse(cablesUpload[i].APPROVERS)
-        const newObj = Object.keys(temp).reduce((accumulator, key) => {
-          return {...accumulator, [key]: false};
-        }, {});
-         await db.execute(`UPDATE SMARTCAPTAR_QUEUE SET APPROVERS = '${JSON.stringify(newObj)}', STATUS = 'REJECTED',COMMENTS = '${comment}' WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`)
-      }
-  
-      for(var i = 0; i < cablesUpload.length; i++){
-        const result = await db.execute(
-          `INSERT INTO SMARTCAPTAR_UPLOAD
-          SELECT * FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`);
-      }
-  
-      for(var i = 0; i < cablesUpload.length; i++){
-        const result = await db.execute(
-          `DELETE FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-    if (db) {
-      try {
-        await db.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-   res.json({ms: "Completed"})
-})
-router.post("/cancelQueue",cors(), async (req,res) => {
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    //New variable for cables taht are being sent 
-    let cablesNum = req.body.cableNum
-    oracledb.autoCommit = true;
-      let db;
-    try {   
-      db = await oracledb.getConnection(conDetails);
-      
-        const resultOne = await db.execute(
-          `INSERT INTO SMARTCAPTAR_UPLOAD
-          SELECT * FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesNum}'`);
-      
-  
-     
-        const resultTwo = await db.execute(
-          `DELETE FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesNum}'`);
-      
-  
-      
-        const resultThree = await db.execute(
-          `UPDATE SMARTCAPTAR_UPLOAD SET STATUS = 'NEW' WHERE CABLENUM = '${cablesNum}'`);
-      
-    } catch (err) {
-      console.error(err);
-    }
-    if (db) {
-      try {
-        await db.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-   res.json({ms: "Completed"})
-})
-router.post("/approveCables",cors(), async (req,res) => {
-    //New variable for cables taht are being sent 
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    let cablesUpload = req.body.cables
-    let user = req.body.user
-    oracledb.autoCommit = true;
-      let db;
-    try {   
-      db = await oracledb.getConnection(conDetails);
-      
-      const allEqual =
-                arr => arr.every( v => v === true );
-                
-                for(var i = 0; i < cablesUpload.length; i++){
-
-                  if(user != "ADMIN"){ 
-        let temp = JSON.parse(cablesUpload[i].APPROVERS)
-       temp[user] = true;
-      cablesUpload[i].APPROVERS = JSON.stringify(temp)
-      console.log(temp)
-    
-       if(allEqual(Object.values(temp))){
-          console.log("HERE")
-         
+      } else {
         await db.execute(
           `INSERT INTO SMARTCAPTAR_HISTORY
-          SELECT * FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`);
-        await db.execute(`UPDATE SMARTCAPTAR_HISTORY SET STATUS = 'APPROVED', APPROVERS = '${cablesUpload[i].APPROVERS}', MODIFIED_DATE = TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM')  WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`)
-      
+          SELECT * FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
+        );
         await db.execute(
-          `DELETE FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`);
-    
-       }else{
-        await db.execute(`UPDATE SMARTCAPTAR_QUEUE SET APPROVERS = '${cablesUpload[i].APPROVERS}' WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`)
-       }
-      }else{
+          `UPDATE SMARTCAPTAR_HISTORY SET STATUS = 'APPROVED', APPROVERS = '${cablesUpload[i].APPROVERS}', MODIFIED_DATE = TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM')  WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
+        );
+
         await db.execute(
-          `INSERT INTO SMARTCAPTAR_HISTORY
-          SELECT * FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`);
-        await db.execute(`UPDATE SMARTCAPTAR_HISTORY SET STATUS = 'APPROVED', APPROVERS = '${cablesUpload[i].APPROVERS}', MODIFIED_DATE = TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM')  WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`)
-      
-        await db.execute(
-          `DELETE FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`);
+          `DELETE FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
+        );
       }
-      }
-         
-         
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (db) {
+    try {
+      await db.close();
     } catch (err) {
       console.error(err);
     }
-   
-  
-    if (db) {
-      try {
-        await db.close();
-      } catch (err) {
-        console.error(err);
-      }
+  }
+
+  res.json({ ms: "Completed" });
+});
+router.post("/updateCable", cors(), async (req, res) => {
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  //New variable for cables taht are being sent
+  let cable = req.body.cable;
+  let user = req.body.user;
+
+  for (const [key, value] of Object.entries(cable)) {
+    console.log(`${key}: ${value}`);
+
+    if (value == null) {
+      cable[key] = "";
     }
+  }
+  console.log("TEST=================");
+  console.log(cable);
 
-   res.json({ms: "Completed"})
-  
-}) 
-router.post("/updateCable",cors(), async (req,res) => {
-    const oracledb = req.db;
-    const conDetails = req.conDetails;
-    //New variable for cables taht are being sent 
-    let cable = req.body.cable
-    let user = req.body.user;
-  
-    for (const [key, value] of Object.entries(cable)) {
-      console.log(`${key}: ${value}`);
+  oracledb.autoCommit = true;
+  let db;
+  try {
+    db = await oracledb.getConnection(conDetails);
 
-      if(value == null){
-        cable[key] = ""
-      }
-    }
-  console.log("TEST=================")
-  console.log(cable)
-
-    oracledb.autoCommit = true;
-      let db;
-    try {   
-      db = await oracledb.getConnection(conDetails);
-       
-        const result = await db.execute(`UPDATE ${req.query.table} SET 
+    const result = await db.execute(`UPDATE ${req.query.table} SET 
 
 
         CABLETYPE = '${cable.CABLETYPE}',
@@ -1208,19 +1304,17 @@ router.post("/updateCable",cors(), async (req,res) => {
         
         
         WHERE CABLENUM = '${cable.CABLENUM}'`);
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (db) {
+    try {
+      await db.close();
     } catch (err) {
       console.error(err);
     }
-   
-  
-    if (db) {
-      try {
-        await db.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-   res.json({ms: "Completed"})
-  
-})
+  }
+  res.json({ ms: "Completed" });
+});
 module.exports = router;
