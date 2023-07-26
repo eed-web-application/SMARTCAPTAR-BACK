@@ -1,0 +1,62 @@
+name: Deployment
+on:
+    workflow_dispatch:
+        inputs:
+            deployment_image:
+                description: 'Image to deploy'
+                required: true
+                type: string
+concurrency:
+    group: ${{ github.workflow }}
+    cancel-in-progress: true
+env:
+    DEPLOY_IMAGE: ${{ inputs.deployment_image }}
+jobs:
+    update-test-deployment:
+        runs-on: ubuntu-latest
+        environment: test
+        outputs:
+            commit_hash: ${{ steps.commit-and-push.outputs.commit_long_sha }}
+        steps:
+            - name: Checkout source code
+              uses: actions/checkout@v3
+            - run: |
+                echo "Configure deploy with image $DEPLOY_IMAGE"
+                tools/set-image-name.sh $DEPLOY_IMAGE test/deployment.yaml
+                cat test/deployment.yaml
+            - name: Commit and Push Changes
+              id: commit-and-push
+              run: |
+                echo "Commit test deploy with image $DEPLOY_IMAGE" 
+                git add test
+                git config --local user.email "github-actions[bot]@users.noreply.github.com"
+                git config --local user.name "github-actions[bot]"
+                git commit -m "Update test deployment ot uses the image '$DEPLOY_IMAGE'"
+                git push
+                echo "commit_hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+    update-production-deployment:
+        runs-on: ubuntu-latest
+        environment:
+            name: production
+            url: https://github.com
+        needs: update-test-deployment
+        steps:
+            - name: Checkout source code
+              uses: actions/checkout@v3
+              with:
+                ref: main
+            - run: |
+                echo "Configure deploy with image $DEPLOY_IMAGE"
+                tools/set-image-name.sh $DEPLOY_IMAGE production/deployment.yaml
+                cat test/deployment.yaml
+                cat production/deployment.yaml
+            - name: Commit and Push Changes
+              run: |
+                  echo "Commit production deploy with image $DEPLOY_IMAGE" 
+                  git add production
+                  git config --local user.email "github-actions[bot]@users.noreply.github.com"
+                  git config --local user.name "github-actions[bot]"
+                  git commit -m "Update production deployment ot uses the image '$DEPLOY_IMAGE'"
+                  git push
+                  echo "commit_hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
