@@ -1,0 +1,10 @@
+name: Build For Deployment
+on: 
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+jobs:
+    build:
+        uses: slaclab/SMARTCAPTAR_BACK-Deployment/.github/workflows/build-test-create.yml@main
+        secrets: inherit
