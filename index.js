@@ -12,7 +12,6 @@ const CableRouter = require("./Routes/Cables");
 const passport = require("passport");
 const cookieParser = require("cookie-parser");
 const LocalStrategy = require("passport-local").Strategy;
-var config = require("./config.json");
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(
