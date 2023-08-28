@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
 var cors = require("cors");
+const {
+  InsertIntoCableINV,
+  LogInHistory,
+  addApproverToCables,
+} = require("./helperFunctions");
 
 router.post("/csvUploadConnectors", async (req, res) => {
   //New variable for cables taht are being sent
@@ -554,34 +559,54 @@ router.post("/uploadCables", cors(), async (req, res) => {
   const conDetails = req.conDetails;
   let cablesUpload = req.body.cables;
   let user = req.body.user;
+  let dupes = req.body.dupes;
+  let recon = req.body.recon;
+
   oracledb.autoCommit = true;
   let db;
 
   try {
     db = await oracledb.getConnection(conDetails);
     for (var i = 0; i < cablesUpload.length; i++) {
-      let NEWCABLENUM;
-      if (cablesUpload[i]["CABLENUM"] == "NEW CABLE") {
-        const cableNum = await db.execute(
-          `SELECT * FROM SMARTCAPTAR_PROJECTS WHERE PROJECT_NAME = '${cablesUpload[i]["AREACODE"]}'`
-        );
-        let numCables = cableNum.rows[0].NUM_CABLES;
-        let prefix = cableNum.rows[0].PREFIX;
-        var string = "" + numCables;
-        var pad = "0000";
-        n = pad.substring(0, pad.length - string.length) + string;
-        NEWCABLENUM = `${prefix + n}`;
-        await db.execute(
-          `UPDATE SMARTCAPTAR_PROJECTS SET NUM_CABLES = '${
-            numCables + 1
-          }' WHERE PROJECT_NAME = '${cablesUpload[i]["AREACODE"]}'`
-        );
-      } else {
-        NEWCABLENUM = cablesUpload[i]["CABLENUM"];
-      }
+      if (
+        !dupes.includes(cablesUpload[i]["CABLENUM"]) &&
+        !recon.includes(cablesUpload[i]["CABLENUM"])
+      ) {
+        console.log(cablesUpload[i]);
+        let NEWCABLENUM;
+        let STATUS;
+        if (cablesUpload[i]["CABLENUM"] == "NEW CABLE") {
+          STATUS = "NEW";
+          const cableNum = await db.execute(
+            `SELECT * FROM SMARTCAPTAR_PROJECTS WHERE PROJECT_NAME = '${cablesUpload[i]["AREACODE"]}'`
+          );
+          let numCables = cableNum.rows[0].NUM_CABLES;
+          let prefix = cableNum.rows[0].PREFIX;
+          var string = "" + numCables;
+          var pad = "0000";
+          n = pad.substring(0, pad.length - string.length) + string;
+          NEWCABLENUM = `${prefix + n}`;
+          await db.execute(
+            `UPDATE SMARTCAPTAR_PROJECTS SET NUM_CABLES = '${
+              numCables + 1
+            }' WHERE PROJECT_NAME = '${cablesUpload[i]["AREACODE"]}'`
+          );
+        } else {
+          NEWCABLENUM = cablesUpload[i]["CABLENUM"];
+          const result = await db.execute(
+            `SELECT * FROM CABLEINV WHERE CABLENUM = '${cablesUpload[i]["CABLENUM"]}'`
+          );
 
-      const result = await db.execute(
-        `INSERT INTO SMARTCAPTAR_UPLOAD (
+          if (result.rows.length > 0) {
+            console.log(result.rows);
+            STATUS = "MODIFY";
+          } else {
+            STATUS = "NEW";
+          }
+        }
+
+        const result = await db.execute(
+          `INSERT INTO SMARTCAPTAR_UPLOAD (
             CABLENUM,
             CABLETYPE,
             JOBNUM,
@@ -640,7 +665,7 @@ router.post("/uploadCables", cors(), async (req, res) => {
           '${cablesUpload[i]["REVISION"]}',
           '${cablesUpload[i]["DWGNUM"]}',
           '${cablesUpload[i]["DRAWING_TITLE"]}',
-          'NEW',
+          '${STATUS}',
           '${cablesUpload[i]["AREACODE"]}',
           '${cablesUpload[i]["ORIGIN_LOC"]}',
           '${cablesUpload[i]["ORIGIN_RACK"]}',
@@ -674,7 +699,8 @@ router.post("/uploadCables", cors(), async (req, res) => {
           '${cablesUpload[i]["MIN_LENGTH"]}',
           '${cablesUpload[i]["MAX_LENGTH"]}',
           '${cablesUpload[i]["ADDNL_LENGTH"]}')`
-      );
+        );
+      }
     }
     res.json({ msg: "SUCCESS" });
   } catch (err) {
@@ -802,74 +828,6 @@ router.post("/createCable", cors(), async (req, res) => {
               '${cable.ADDNL_LENGTH}',
                   '${cable.REVISION}')`
     );
-    // const result = await db.execute(
-    //   `INSERT INTO SMARTCAPTAR_UPLOAD
-    //   (STATUS,
-    //     ENTEREDBY,
-    //     CABLENUM,
-    //     CABLETYPE,
-    //     JOBNUM,
-    //     ENTEREDBY,
-    //     DATEENT,
-    //     FUNC,
-    //     ACTIONREQ,
-    //     SYSTEM,
-    //     LENGTH,
-    //     ROUTING,
-    //     LIST_NO,
-    //     DWGNUM,
-    //     CABLEINV_ID,
-    //     CREATED_BY,
-    //     CREATED_DATE,
-    //     MODIFIED_BY,
-    //     MODIFIED_DATE,
-    //     DRAWING_TITLE,
-    //     STATUS,
-    //     AREACODE,
-    //     LOC,
-    //     RACK,
-    //     ELE,
-    //     SLOT,
-    //     CONNUM,
-    //     PINLIST,
-    //     CONNTYPE,
-    //     STATION,
-    //     INSTR,
-    //     STATION_OLD,
-    //     APPROVERS)
-    //   VALUES
-    //   ('${"NEW"}','${cable["CABLENUM"]}','${cable["CABLENUM"]}',
-    //   '${cable["CABLETYPE"]}',
-    //   '${cable["JOBNUM"]}',
-    //   '${user}',
-    //   TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM'),
-    //   '${cable["FUNC"]}',
-    //   '1',
-    //   '',
-    //   '${cable["LENGTH"]}',
-    //   '${cable["ROUTING"]}',
-    //   '',
-    //   '',
-    //   '',
-    //   '${user}',
-    //   TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM'),
-    //   '${user}',
-    //   TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM'),
-    //   '${cable["Drawing Title"]}',
-    //   'NEW',
-    //   '${cable["AREACODE"]}',
-    //   '${cable["LOC"]}',
-    //   '${cable["RACK"]}',
-    //   '${cable["ELE"]}',
-    //   '${cable["SLOT"]}',
-    //   '${cable["CONNUM"]}',
-    //   '${cable["PINLIST"]}',
-    //   '${cable["CONNTYPE"]}',
-    //   '${cable["STATION"]}',
-    //   '${cable["INSTR"]}',
-    //   '1',
-    //   '${admins}'
-    //  )`);
 
     res.json({ msg: "SUCCESS" });
   } catch (err) {
@@ -918,6 +876,7 @@ router.post("/checkCables", cors(), async (req, res) => {
   //New variable for cables taht are being sent
   let cablesUpload = req.body.cables;
   let duplicateCables = [];
+  let nonRecognizedCablenums = [];
   oracledb.autoCommit = true;
   let db;
   try {
@@ -930,6 +889,12 @@ router.post("/checkCables", cors(), async (req, res) => {
       if (result.rows.length > 0) {
         duplicateCables.push(cablesUpload[i]["CABLENUM"]);
       }
+      if (
+        result.rows.length == 0 &&
+        cablesUpload[i]["CABLENUM"] != "NEW CABLE"
+      ) {
+        nonRecognizedCablenums.push(cablesUpload[i]["CABLENUM"]);
+      }
     }
     for (var i = 0; i < cablesUpload.length; i++) {
       const result = await db.execute(
@@ -939,7 +904,7 @@ router.post("/checkCables", cors(), async (req, res) => {
         duplicateCables.push(cablesUpload[i]["CABLENUM"]);
       }
     }
-    res.json({ duplicateCables: duplicateCables });
+    res.json({ duplicateCables: duplicateCables, nonRecognizedCablenums });
   } catch (err) {
     console.error(err);
   }
@@ -1184,39 +1149,21 @@ router.post("/approveCables", cors(), async (req, res) => {
         let temp = JSON.parse(cablesUpload[i].APPROVERS);
         temp[user] = true;
         cablesUpload[i].APPROVERS = JSON.stringify(temp);
-        console.log(temp);
 
         if (allEqual(Object.values(temp))) {
-          console.log("HERE");
-
-          await db.execute(
-            `INSERT INTO SMARTCAPTAR_HISTORY
-          SELECT * FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
-          );
-          await db.execute(
-            `UPDATE SMARTCAPTAR_HISTORY SET STATUS = 'APPROVED', APPROVERS = '${cablesUpload[i].APPROVERS}', MODIFIED_DATE = TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM')  WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
-          );
-
-          await db.execute(
-            `DELETE FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
-          );
+          await InsertIntoCableINV(user, cablesUpload, db);
+          await LogInHistory(user, cablesUpload, db);
         } else {
+          //If they dont all equal just mark the user who approved the cable
           await db.execute(
             `UPDATE SMARTCAPTAR_QUEUE SET APPROVERS = '${cablesUpload[i].APPROVERS}' WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
           );
         }
       } else {
-        await db.execute(
-          `INSERT INTO SMARTCAPTAR_HISTORY
-          SELECT * FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
-        );
-        await db.execute(
-          `UPDATE SMARTCAPTAR_HISTORY SET STATUS = 'APPROVED', APPROVERS = '${cablesUpload[i].APPROVERS}', MODIFIED_DATE = TO_TIMESTAMP_TZ(CURRENT_TIMESTAMP, 'DD-MON-RR HH.MI.SSXFF PM TZH:TZM')  WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
-        );
-
-        await db.execute(
-          `DELETE FROM SMARTCAPTAR_QUEUE WHERE CABLENUM = '${cablesUpload[i].CABLENUM}'`
-        );
+        //Approve the cable since the ADMIN Account Allowed it
+        await InsertIntoCableINV(user, cablesUpload, db);
+        //Log into History
+        await LogInHistory(user, cablesUpload, db);
       }
     }
   } catch (err) {

@@ -377,6 +377,39 @@ router.post("/addProject", async (req, res) => {
     }
   }
 });
+router.post("/updateProject", async (req, res) => {
+  const oracledb = req.db;
+  const conDetails = req.conDetails;
+  //New variable for cables taht are being sent
+  let project = req.body.project;
+  let prefix = req.body.prefix;
+  let old = req.body.oldProject;
+
+  let area = req.body.area;
+  oracledb.autoCommit = true;
+  let db;
+  console.log(project);
+  console.log(prefix);
+  try {
+    db = await oracledb.getConnection(conDetails);
+
+    const result = await db.execute(
+      `UPDATE SMARTCAPTAR_PROJECTS SET PROJECT_NAME = '${project}', PREFIX = '${prefix}' WHERE PROJECT_NAME = '${old}'`
+    );
+
+    res.json({ msg: "SUCCESS" });
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (db) {
+    try {
+      await db.close();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+});
 router.post("/addToWorkspace", async (req, res) => {
   //New variable for cables taht are being sent
   const oracledb = req.db;
