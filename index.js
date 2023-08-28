@@ -33,7 +33,7 @@ console.log(
 //connect to oracle db
 const oracledb = require("oracledb");
 try {
-  oracledb.initOracleClient({ libDir: "instantclient_21_6" });
+  oracledb.initOracleClient({ libDir: "client" });
 } catch (err) {
   console.error(err);
   process.exit(1);
