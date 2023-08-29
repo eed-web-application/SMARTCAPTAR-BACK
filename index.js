@@ -32,12 +32,12 @@ console.log(
 );
 //connect to oracle db
 const oracledb = require("oracledb");
-try {
-  oracledb.initOracleClient();
-} catch (err) {
-  console.error(err);
-  process.exit(1);
-}
+// try {
+//   oracledb.initOracleClient();
+// } catch (err) {
+//   console.error(err);
+//   process.exit(1);
+// }
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 const conDetails = {
   user: process.env.USER.toString(),
