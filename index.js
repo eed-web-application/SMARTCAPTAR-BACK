@@ -140,40 +140,14 @@ app.post("/logout", cors(), (req, res) => {
 
 app.post("/test", async (req, res) => {
   //New variable for cables taht are being sent
-  let cablesUpload = req.body.conn;
-  let user = req.body.user;
-  oracledb.autoCommit = true;
-  let db;
-  try {
-    db = await oracledb.getConnection(conDetails);
-    for (var i = 0; i < cablesUpload.length; i++) {
-      const result = await db.execute(
-        `INSERT INTO SMARTCAPTAR_COMPATIBILITY (CABLETYPE,COMPAT)
-        VALUES 
-        (
-        '${cablesUpload[i].CATNO}',
-        '${cablesUpload[i].arr.toString()}'
-        )`
-      );
-    }
-    res.json({ msg: "SUCCESS" });
-  } catch (err) {
-    console.error(err);
-  }
 
-  if (db) {
-    try {
-      await db.close();
-    } catch (err) {
-      console.error(err);
-    }
-  }
+  res.json({ msg: "SUCCESS" });
 });
 
 // Starting Web Server
 async function ws() {
-  server.listen(5000, function () {
-    console.log("Listening on http://localhost:" + 5000);
+  server.listen(1337, function () {
+    console.log("Listening on http://localhost:" + 1337);
   });
 }
 
