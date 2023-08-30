@@ -77,6 +77,7 @@ WORKDIR /myapp
 ADD package.json index.js /myapp/
 RUN npm install
 COPY . .
-EXPOSE 1337
+EXPOSE 1337 
+EXPOSE 1512
 CMD exec node index.js
 
