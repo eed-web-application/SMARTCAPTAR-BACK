@@ -40,7 +40,13 @@ const conDetails = {
   connectString: process.env.CONNECTSTRING.toString(),
   events: true,
 };
-
+var con = oracledb.getConnection(conDetails,
+function(err, Connection){
+if(err){
+console.log('Error connecting to Db',err);
+return;
+}
+console.log('Connection established');});
 passport.serializeUser((user, done) => {
   done(null, user.USERNAME);
 });
