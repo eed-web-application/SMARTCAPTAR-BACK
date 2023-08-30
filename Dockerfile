@@ -70,8 +70,8 @@ RUN wget https://download.oracle.com/otn_software/linux/instantclient/instantcli
     echo /opt/oracle/instantclient* > /etc/ld.so.conf.d/oracle-instantclient.conf && ldconfig
 
 
-COPY tnsnames.ora /opt/oracle/instantclient_21_11/network/admin
-ENV TNS_ADMIN /opt/oracle/instantclient_21_11/network/admin
+# COPY tnsnames.ora /opt/oracle/instantclient_21_11/network/admin
+# ENV TNS_ADMIN /opt/oracle/instantclient_21_11/network/admin
 
 WORKDIR /myapp
 ADD package.json index.js /myapp/
