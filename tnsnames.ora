@@ -1,0 +1,9 @@
+SLACQA=
+ (description=
+   (address_list=
+     (address = (protocol = TCP)(host = slacqa.slac.stanford.edu)(port = 1521))
+   )
+ (connect_data =
+   (service_name=CAPTAR)
+ )
+)
