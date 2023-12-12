@@ -3,7 +3,13 @@ const http = require("http");
 const app = express();
 const server = http.createServer(app);
 const dotenv = require("dotenv");
-dotenv.config();
+const envFile = `${
+  process.env.ORACLE_CREDENTIAL_ENV
+    ? `${process.env.ORACLE_CREDENTIAL_ENV}`
+    : ".env"
+}`;
+console.log(`Use dotenv path: ${envFile}`);
+dotenv.config({ path: envFile });
 var cors = require("cors");
 const session = require("express-session");
 const store = new session.MemoryStore();
