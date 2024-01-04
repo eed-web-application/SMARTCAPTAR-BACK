@@ -43,7 +43,7 @@ oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 const conDetails = {
   user: process.env.USER.toString(),
   password: process.env.PASSWORD.toString(),
-  connectString: "(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = slacqa.slac.stanford.edu)(PORT = 1521))(CONNECT_DATA =(SID= SLACQA)))",
+  connectString: process.env.URI.toString(),
   events: true,
 };
 oracledb.getConnection(conDetails, function (err, Connection) {
