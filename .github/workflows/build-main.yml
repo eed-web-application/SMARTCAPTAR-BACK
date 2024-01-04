@@ -6,5 +6,5 @@ concurrency:
   cancel-in-progress: true
 jobs:
     build:
-        uses: slaclab/SMARTCAPTAR_BACK-Deployment/.github/workflows/build-test-create.yml@feature/oracle-credential-on-vault
+        uses: slaclab/SMARTCAPTAR_BACK-Deployment/.github/workflows/build-test-create.yml@main
         secrets: inherit
